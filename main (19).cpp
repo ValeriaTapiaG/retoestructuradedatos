@@ -6,7 +6,7 @@
 #include <string> // Include this header for string manipulation
 
 using namespace std;
-
+    int registroCount;
 class Fecha {
 public:
     Fecha(int year, int month, int day) : year(year), month(month), day(day) {}
@@ -132,7 +132,7 @@ vector<BitacoraLinea> read_csv_bitacora(const string& filename) {
     }
 
     string linea;
-    // registroCount = 0;
+     registroCount = 0;
     while (getline(file, linea)) {
         stringstream ss(linea);
         string fecha, hora, ipOrigen, nombreOrigen, ipDestino, nombreDestino;
@@ -148,9 +148,9 @@ vector<BitacoraLinea> read_csv_bitacora(const string& filename) {
         ss >> puertoDestino;
         ss.ignore();
         getline(ss, nombreDestino, ',');
-
+      
         bitacora.emplace_back(fecha, hora, ipOrigen, puertoOrigen, nombreOrigen, ipDestino, puertoDestino, nombreDestino);
-     
+     registroCount++;
     }
 
     file.close();
@@ -158,20 +158,28 @@ vector<BitacoraLinea> read_csv_bitacora(const string& filename) {
     return bitacora;
 }
 
+
+
+
 int main() {
     string filename = "equipo13.csv";
+  
     try {
+      //int registroCount;
         vector<BitacoraLinea> bitacora = read_csv_bitacora(filename);
+      
 
         // Ordena el vector de bitácora por fecha utilizando la función de ordenamiento
         bitacora = Ordenamiento<BitacoraLinea>::insercion(bitacora, comparaPorFecha);
 
-        for (const BitacoraLinea& linea : bitacora) {
+       /* for (const BitacoraLinea& linea : bitacora) {
             cout << "Fecha: " << linea.getFecha() << ", Hora: " << linea.getHora() << endl;
-        }
+        }*/
+       cout << "Número de registros en el archivo: " << registroCount << endl;
     } catch (const exception& e) {
         cerr << "Error: " << e.what() << endl;
     }
 
     return 0;
-}
+};
+
