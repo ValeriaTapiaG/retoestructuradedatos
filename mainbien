@@ -1,0 +1,170 @@
+#include <iostream>
+#include <vector>
+#include <stdexcept>
+#include <string>
+#include <iterator>
+#include <algorithm>
+#include <sstream>
+#include "BitacoraLinea.h"
+#include "Fecha.h"
+#include "Ordenamiento.h"
+#include "ConexionesComputadora.hpp"
+
+
+// Declaraciones previas
+Fecha parseFecha(const std::string& fechaStr);
+std::vector<BitacoraLinea> read_csv_bitacora(const std::string& filename);
+
+// Función para comparar dos objetos de la clase BitacoraLinea por fecha
+bool comparaPorFecha(BitacoraLinea a, BitacoraLinea b) {
+    Fecha fechaA(parseFecha(a.getFecha()));
+    Fecha fechaB(parseFecha(b.getFecha()));
+    return fechaA < fechaB;
+}
+
+// Función para crear un objeto de Fecha que almacene el año, mes y día por separado
+Fecha parseFecha(const std::string& fechaStr) {
+    int year, month, day;
+    char dash;
+    std::stringstream ss(fechaStr);
+    ss >> year >> dash >> month >> dash >> day;
+    return Fecha(year, month, day);
+}
+
+int main() {
+    // Para abrir el archivo
+    // Define el nombre del archivo
+    std::string filename = "equipo13.csv";
+
+    // Try-except por si hay un error al abrir el archivo
+    try {
+      // Leer el archivo CSV y almacenar los registros en 'bitacora'
+        std::vector<BitacoraLinea> bitacora = read_csv_bitacora(filename);
+        
+          
+        // ¿Qué puertos abajo del 1000 se están usando?
+        std::vector<int> puertosUtilizados;
+
+        for (int i = 0; i < bitacora.size(); ++i) {
+            int puertoOrigen = bitacora[i].getPuertoOrigen();
+            int puertoDestino = bitacora[i].getPuertoDestino();
+
+            // Si el puerto de destino es menor a 1000, se agrega al vector de puertosUtilizados
+            if (puertoDestino < 1000) {
+                puertosUtilizados.push_back(puertoDestino);
+            }
+        }
+
+        // Ordena el vector y elimina duplicados
+        std::sort(puertosUtilizados.begin(), puertosUtilizados.end());
+        puertosUtilizados.erase(std::unique(puertosUtilizados.begin(), puertosUtilizados.end()), puertosUtilizados.end());
+//pregunta 7
+        std::cout << "Puertos utilizados por debajo de 1000:" << std::endl;
+        for (int puerto : puertosUtilizados) {
+            std::cout << puerto << std::endl;
+        }
+
+        // Ordena el vector de la bitácora por fecha utilizando la función de comparación comparaPorFecha
+        bitacora = Ordenamiento<BitacoraLinea>::insercion(bitacora, comparaPorFecha);
+
+        std::string firstDay, secondDay;
+        int contFirstDay = 0, contSecondDay = 0;
+// Nombres y correos buscados para pregunta 3
+        std::vector<std::string> nombresBuscados = {"jeffrey", "betty", "katherine", "scott", "benjamin", "samuel", "raymond"};
+        std::vector<std::string> correosBuscados = {"gmail", "hotmail", "outlook", "protonmail", "live", "play"};
+      
+// Almacenar nombres, correos, y direcciones IP encontradas
+        std::vector<std::string> correosEncontrados;
+        std::vector<std::string> nombresEncontrados;
+        std::vector<std::string> ipOrigenEncontradas;
+
+        bool serverFound = false;
+        bool serverRetoFound = false;
+//para pregunta 2
+        for (int i = 0; i < bitacora.size(); ++i) {
+            if (firstDay.empty()) {
+                firstDay = bitacora[i].getFecha();
+            } else if (bitacora[i].getFecha() != firstDay) {
+                if (secondDay.empty()) {
+                    secondDay = bitacora[i].getFecha();
+                }
+                if (bitacora[i].getFecha() == secondDay) {
+                    contSecondDay++;
+                }
+            }
+
+            if (bitacora[i].getFecha() == firstDay) {
+                contFirstDay++;
+            }
+//para pregunta 3
+            std::string nombreOrigen = bitacora[i].getNombreOrigen();
+            size_t puntoPos = nombreOrigen.find('.');
+            if (puntoPos != std::string::npos) {
+                std::string nombre = nombreOrigen.substr(0, puntoPos);
+                if (std::find(nombresBuscados.begin(), nombresBuscados.end(), nombre) != nombresBuscados.end()) {
+                    if (std::find(nombresEncontrados.begin(), nombresEncontrados.end(), nombre) == nombresEncontrados.end()) {
+                        nombresEncontrados.push_back(nombre);
+                    }
+                }
+            }
+//para pregunta 5
+            std::string nombreOrigenCompleto = bitacora[i].getNombreOrigen();
+            std::string nombreDestinoCompleto = bitacora[i].getNombreDestino();
+
+            if (!serverRetoFound && (nombreOrigenCompleto == "server.reto.com" || nombreDestinoCompleto == "server.reto.com")) {
+                std::cout << "Hay computadoras que se llaman server.reto.com en el archivo " << std::endl;
+                serverRetoFound = true;
+            }
+//para pregunta 6
+            std::string nombreDestino = bitacora[i].getNombreDestino();
+            size_t puntoPos2 = nombreDestino.find('.');
+            if (puntoPos2 != std::string::npos) {
+                std::string correo = nombreDestino.substr(0, puntoPos2);
+                if (std::find(correosBuscados.begin(), correosBuscados.end(), correo) != correosBuscados.end()) {
+                    if (std::find(correosEncontrados.begin(), correosEncontrados.end(), correo) == correosEncontrados.end()) {
+                        correosEncontrados.push_back(correo);
+                    }
+                }
+            }
+//para pregunta 4
+            for (const std::string& persona : nombresEncontrados) {
+                if (nombreOrigen.find(persona) != std::string::npos) {
+                    size_t puntoPosIP = bitacora[i].getIPOrigen().find('.', + 5);
+                    if (puntoPosIP != std::string::npos) {
+                        std::string ipOrigen = bitacora[i].getIPOrigen().substr(0, puntoPosIP);
+                        if (std::find(ipOrigenEncontradas.begin(), ipOrigenEncontradas.end(), ipOrigen) == ipOrigenEncontradas.end()) {
+                            ipOrigenEncontradas.push_back(ipOrigen);
+                        }
+                    }
+                }
+            }
+        }
+      
+        //pregunta 1
+        std::cout << "Número de registros en el archivo: " << bitacora.size() << std::endl;
+       //pregunta 2
+      std::cout << "Fecha del segundo día: " << secondDay << std::endl;
+        std::cout << "Número de registros en el segundo día: " << contSecondDay << std::endl;
+
+      //pregutna 3
+        std::cout << "Nombres encontrados en la bitácora:" << std::endl;
+        for (const std::string& nombre : nombresEncontrados) {
+            std::cout << nombre << std::endl;
+        }
+//pregutna 6
+        std::cout << "Correos electrónicos encontrados en la bitácora:" << std::endl;
+        for (const std::string& correo : correosEncontrados) {
+            std::cout << correo << std::endl;
+        }
+//pregunta 4
+        std::cout << "Dirección de la red interna de la compañía:" << std::endl;
+        for (const std::string& ip : ipOrigenEncontradas) {
+            std::cout << ip << std::endl;
+        }
+      
+    } catch (const std::exception& e) {
+        std::cerr << "Error: " << e.what() << std::endl;
+    }  
+
+    return 0;
+}
